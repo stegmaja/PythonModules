@@ -440,3 +440,26 @@ def Kozai_timescale(a_in,a_out,e_out,m_in,m_out,units=(u.AU,u.yr,u.Msun)):
     T_Kozai = m_in/n/m_out*(a_out/a_in)**3*(1-e_out**2)**(3/2)
 
     return T_Kozai
+
+def Roche_lobe_radius(m1,m2):
+    '''
+    Input:
+        m1: mass of the primary
+        m2: mass of the secondary
+    Output:
+        R_L: Roche lobe radius (units of separation)
+    '''
+
+    # Raise error if input is not a number
+    if(not all(isinstance(x,(int,float)) for x in [m1,m2])):
+        raise ValueError('m1,m2 must be numbers')
+    
+    # Raise error if m1, m2 are negative
+    if(m1<0 or m2<0):
+        raise ValueError('m1,m2 must be positive')
+    
+    q = m1/m2
+
+    R_L = 0.49*q**(2/3)/(0.6*q**(2/3)+np.log(1+q**(1/3)))
+
+    return R_L
