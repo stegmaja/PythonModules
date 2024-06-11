@@ -408,6 +408,35 @@ def orbital_period(a,m=1,units=(u.AU,u.yr,u.Msun)):
 
     return T
 
+def semi_major_axis(T,m=1,units=(u.AU,u.yr,u.Msun)):
+    '''
+    Input:
+        T: orbital period (yr)
+        m: total mass (Msun)
+        units: units of the input/output parameters
+
+    Output:
+        a: semi-major axis (AU)
+    '''
+
+    # Raise error if input is not a number
+    if(not all(isinstance(x,(int,float)) for x in [T,m])):
+        raise ValueError('T,m must be numbers')
+    
+    # Raise error if T is negative
+    if(T<0):
+        raise ValueError('T must be positive')
+    
+    # Raise error if m is negative
+    if(m<0):
+        raise ValueError('m must be positive')
+
+    m *= G.to(units[0]**3/units[1]**2/units[2]).value
+
+    a = (T**2/(4*np.pi**2)*m)**(1/3)
+
+    return a
+
 def Kozai_timescale(a_in,a_out,e_out,m_in,m_out,units=(u.AU,u.yr,u.Msun)):
     '''
     Input:
