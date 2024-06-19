@@ -498,7 +498,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
                        log_a_in_min=0, log_a_in_max=2, log_a_out_min=0, log_a_out_max=4,
                        e_in_alpha=1, e_out_alpha=1,
                        rcom=np.zeros(3), vcom=np.zeros(3),
-                       check_stable=True, m1=1, m2=1, m3=3, 
+                       check_stable=True, m1=1, m2=1, m3=1, 
                        units=(u.AU,u.km/u.s,u.Msun)):
     '''
     Input:
