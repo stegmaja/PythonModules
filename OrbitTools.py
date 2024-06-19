@@ -492,3 +492,177 @@ def Roche_lobe_radius(m1,m2):
     R_L = 0.49*q**(2/3)/(0.6*q**(2/3)+np.log(1+q**(1/3)))
 
     return R_L
+
+def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega_in=None, f_in=None,
+                       a_out=None, e_out=None, cos_i_out=None, Omega_out=None, omega_out=None, f_out=None, 
+                       log_a_in_min=0, log_a_in_max=2, log_a_out_min=0, log_a_out_max=4,
+                       e_in_alpha=1, e_out_alpha=1,
+                       rcom=np.zeros(3), vcom=np.zeros(3),
+                       check_stable=True, m1=1, m2=1, m3=3, 
+                       units=(u.AU,u.km/u.s,u.Msun)):
+    '''
+    Input:
+        a_in: semi-major axis of inner binary (AU)
+        e_in: eccentricity of inner binary
+        cos_i_in: Cos of inclination of inner binary
+        Omega_in: longitude of the ascending node of inner binary
+        omega_in: argument of periapsis of inner binary
+        f_in: true anomaly of inner binary
+        a_out: semi-major axis of outer binary (AU)
+        e_out: eccentricity of outer binary
+        cos_i_out: Cos of inclination of outer binary
+        Omega_out: longitude of the ascending node of outer binary
+        omega_out: argument of periapsis of outer binary
+        f_out: true anomaly of outer binary
+        log_a_in_min: minimum log of semi-major axis of inner binary
+        log_a_in_max: maximum log of semi-major axis of inner binary
+        log_a_out_min: minimum log of semi-major axis of outer binary
+        log_a_out_max: maximum log of semi-major axis of outer binary
+        e_in_alpha: power-law index for inner binary eccentricity
+        e_out_alpha: power-law index for outer binary eccentricity
+        rcom: centre of mass position (AU)
+        vcom: centre of mass velocity (km/s)
+        check_stable: check if triple is stable
+        m1: mass of the primary (Msun)
+        m2: mass of the secondary (Msun)
+        m3: mass of the tertiary (Msun)
+        units: units of the input/output parameters
+
+    Output:
+        xvec1: position vector of the primary (AU)
+        xvec2: position vector of the secondary (AU)
+        xvec3: position vector of the tertiary (AU)
+        vvec1: velocity vector of the primary (km/s)
+        vvec2: velocity vector of the secondary (km/s)
+        vvec3: velocity vector of the tertiary (km/s)
+    '''
+
+    # Raise error if input is not a number or None
+    if(not all(isinstance(x,(int,float)) or x is None for x in [a_in,e_in,cos_i_in,Omega_in,omega_in,f_in,a_out,e_out,cos_i_out,Omega_out,omega_out,f_out])):
+        raise ValueError('All input parameters must be numbers or None')
+    
+    # Raise error if units is not a tuple of 3 elements
+    if(not isinstance(units,tuple) or len(units)!=3):
+        raise ValueError('units must be a tuple of 3 elements')
+    
+    # Raise error if rcom, vcom are not numpy arrays containing numbers
+    if(not isinstance(rcom,np.ndarray) or not isinstance(vcom,np.ndarray) or not all(isinstance(x,(int,float)) for x in rcom) or not all(isinstance(x,(int,float)) for x in vcom)):
+        raise ValueError('rcom,vcom must be numpy arrays containing numbers')
+    
+    # Raise error if check_stable is not a boolean
+    if(not isinstance(check_stable,bool)):
+        raise ValueError('check_stable must be a boolean')
+    
+    # Raise error if log_a_in_min, log_a_in_max, log_a_out_min, log_a_out_max, e_in_alpha, e_out_alpha are not numbers
+    if(not all(isinstance(x,(int,float)) for x in [log_a_in_min,log_a_in_max,log_a_out_min,log_a_out_max,e_in_alpha,e_out_alpha])):
+        raise ValueError('log_a_in_min,log_a_in_max,log_a_out_min,log_a_out_max,e_in_alpha,e_out_alpha must be numbers')
+    
+    # Raise error if log_a_out_max is smaller than log_a_in_min
+    if(log_a_out_max<log_a_in_min):
+        raise ValueError('log_a_out_max must be greater than log_a_in_min')
+    
+    if a_in is None:
+        a_in = 10**np.random.uniform(log_a_in_min,log_a_in_max)
+
+    if e_in is None:
+        e_in = np.random.uniform(0,1)**(1/(e_in_alpha+1)) # Power-law distribution
+
+    if cos_i_in is None:
+        cos_i_in = np.random.uniform(-1,1)
+
+    if Omega_in is None:
+        Omega_in = np.random.uniform(0,2*np.pi)
+
+    if omega_in is None:
+        omega_in = np.random.uniform(0,2*np.pi)
+
+    if f_in is None:
+        f_in = get_true_anomaly(e_in)
+
+    # Record which of the outer binary parameters were None and must not be changed
+    a_out_was_None = a_out is None
+    e_out_was_None = e_out is None
+    cos_i_out_was_None = cos_i_out is None
+    Omega_out_was_None = Omega_out is None
+    omega_out_was_None = omega_out is None
+    f_out_was_None = f_out is None  
+
+    if check_stable and not a_out_was_None and e_out_was_None:
+        stable = check_triple_stability(a_in,a_out,e_out,m1+m2,m3)
+        raise ValueError('Provided outer binary yield no stable triple system') # Note that one could have resampled a_in
+    
+    else:
+        stable = False
+
+        counter = 0
+
+        while not stable and counter<1e5:
+
+            if a_out_was_None:
+                a_out = 10**np.random.uniform(log_a_out_min,log_a_out_max)
+                
+            if e_out_was_None:
+                e_out = np.random.uniform(0,1)**(1/(e_out_alpha+1))
+
+            if cos_i_out_was_None:
+                cos_i_out = np.random.uniform(-1,1)
+
+            if Omega_out_was_None:
+                Omega_out = np.random.uniform(0,2*np.pi)
+
+            if omega_out_was_None:
+                omega_out = np.random.uniform(0,2*np.pi)
+
+            if f_out_was_None:
+                f_out = get_true_anomaly(e_out)
+
+            if check_stable:
+                stable = check_triple_stability(a_in,a_out,e_out,m1+m2,m3)
+            else:
+                stable = True
+
+            counter += 1
+
+        if counter==1e5:
+            raise ValueError('No stable triple system found after 1e5 iterations')
+
+    # Total masses
+    m_in = m1+m2
+    m_out = m_in+m3
+
+    # Calculate relative vectors
+    rvec_in,vvec_in = orbital_elements_to_vectors(a_in, e_in, cos_i_in, Omega_in, omega_in, f_in, m=m_in, units=units)
+    rvec_out,vvec_out = orbital_elements_to_vectors(a_out, e_out, cos_i_out, Omega_out, omega_out, f_out, m=m_out, units=units)
+
+    # Calculate positions and velocities
+    xvec_in = m3/m_out*rvec_out # Centre of mass position of inner binary
+    xvec3 = -m_in/m_out*rvec_out # Position of tertiary
+    
+    vvec_in = m3/m_out*vvec_out # Centre of mass velocity of inner binary
+    vvec3 = -m_in/m_out*vvec_out # Position of tertiary
+
+    xvec1 = xvec_in + m2/m_in*rvec_in # Position of primary
+    xvec2 = xvec_in - m1/m_in*rvec_in # Position of secondary
+
+    vvec1 = vvec_in + m2/m_in*vvec_in # Velocity of primary
+    vvec2 = vvec_in - m1/m_in*vvec_in # Velocity of secondary
+
+    # Check if centre of mass is at origin and at rest
+    if not np.allclose(np.sum([m1*xvec1,m2*xvec2,m3*xvec3],axis=0),np.zeros(3)):
+        raise ValueError('Centre of mass is not at origin')
+    
+    if not np.allclose(np.sum([m1*vvec1,m2*vvec2,m3*vvec3],axis=0),np.zeros(3)):
+        raise ValueError('Centre of mass is not at rest')
+    
+    # Add centre of mass position and velocity
+    xvec1 += rcom
+    xvec2 += rcom
+    xvec3 += rcom
+
+    vvec1 += vcom
+    vvec2 += vcom
+    vvec3 += vcom
+
+    return xvec1,xvec2,xvec3,vvec1,vvec2,vvec3
+
+print('OrbitTools.py loaded.')
