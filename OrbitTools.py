@@ -561,6 +561,11 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
     if(log_a_out_max<log_a_in_min):
         raise ValueError('log_a_out_max must be greater than log_a_in_min')
     
+    # Total masses
+    m_in = m1+m2
+    m_out = m_in+m3
+    
+    # Generate random inner binary parameters if not provided
     if a_in is None:
         a_in = 10**np.random.uniform(log_a_in_min,log_a_in_max)
 
@@ -588,7 +593,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
     f_out_was_None = f_out is None  
 
     if check_stable and not a_out_was_None and e_out_was_None:
-        stable = check_triple_stability(a_in,a_out,e_out,m1+m2,m3)
+        stable = check_triple_stability(a_in,a_out,e_out,m_in,m3)
         raise ValueError('Provided outer binary yield no stable triple system') # Note that one could have resampled a_in
     
     else:
@@ -598,6 +603,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
 
         while not stable and counter<1e5:
 
+            # Generate random outer binary parameters if not provided
             if a_out_was_None:
                 a_out = 10**np.random.uniform(log_a_out_min,log_a_out_max)
                 
@@ -617,7 +623,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
                 f_out = get_true_anomaly(e_out)
 
             if check_stable:
-                stable = check_triple_stability(a_in,a_out,e_out,m1+m2,m3)
+                stable = check_triple_stability(a_in,a_out,e_out,m_in,m3)
             else:
                 stable = True
 
@@ -625,10 +631,6 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
 
         if counter==1e5:
             raise ValueError('No stable triple system found after 1e5 iterations')
-
-    # Total masses
-    m_in = m1+m2
-    m_out = m_in+m3
 
     # Calculate relative vectors
     rvec_in,vvec_in = orbital_elements_to_vectors(a_in, e_in, cos_i_in, Omega_in, omega_in, f_in, m=m_in, units=units)
