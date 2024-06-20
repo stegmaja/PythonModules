@@ -499,7 +499,8 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
                        e_in_alpha=1, e_out_alpha=1,
                        rcom=np.zeros(3), vcom=np.zeros(3),
                        check_stable=True, m1=1, m2=1, m3=1, 
-                       units=(u.AU,u.km/u.s,u.Msun)):
+                       units=(u.AU,u.km/u.s,u.Msun),
+                       verbose=False):
     '''
     Input:
         a_in: semi-major axis of inner binary (AU)
@@ -631,6 +632,29 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
 
         if counter==1e5:
             raise ValueError('No stable triple system found after 1e5 iterations')
+
+    # If verbose, print the generated parameters
+    if verbose:
+        print('Masses:')
+        print('Primary:',m1,units[2])
+        print('Secondary:',m2,units[2])
+        print('Tertiary:',m3,units[2],end='\n\n')
+
+        print('Generated inner binary parameters:')
+        print('Semi-major axis:',a_in,units[0])
+        print('Eccentricity:',e_in)
+        print('Inclination:',np.arccos(cos_i_in))
+        print('Longitude of the ascending node:',Omega_in)
+        print('Argument of periapsis:',omega_in)
+        print('True anomaly:',f_in,end='\n\n')
+
+        print('Generated outer binary parameters:')
+        print('Semi-major axis:',a_out,units[0])
+        print('Eccentricity:',e_out)
+        print('Inclination:',np.arccos(cos_i_out))
+        print('Longitude of the ascending node:',Omega_out)
+        print('Argument of periapsis:',omega_out)
+        print('True anomaly:',f_out,end='\n\n')
 
     # Calculate relative vectors
     rvec_in,vvec_in = orbital_elements_to_vectors(a_in, e_in, cos_i_in, Omega_in, omega_in, f_in, m=m_in, units=units)
