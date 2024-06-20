@@ -643,7 +643,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
         print('Generated inner binary parameters:')
         print('Semi-major axis:',a_in,units[0])
         print('Eccentricity:',e_in)
-        print('Inclination:',np.arccos(cos_i_in))
+        print('Cos Inclination:',cos_i_in)
         print('Longitude of the ascending node:',Omega_in)
         print('Argument of periapsis:',omega_in)
         print('True anomaly:',f_in,end='\n\n')
@@ -651,7 +651,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
         print('Generated outer binary parameters:')
         print('Semi-major axis:',a_out,units[0])
         print('Eccentricity:',e_out)
-        print('Inclination:',np.arccos(cos_i_out))
+        print('Cos Inclination:',cos_i_out)
         print('Longitude of the ascending node:',Omega_out)
         print('Argument of periapsis:',omega_out)
         print('True anomaly:',f_out,end='\n\n')
@@ -661,17 +661,17 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
     rvec_out,vvec_out = orbital_elements_to_vectors(a_out, e_out, cos_i_out, Omega_out, omega_out, f_out, m=m_out, units=units)
 
     # Calculate positions and velocities
-    xvec_in = m3/m_out*rvec_out # Centre of mass position of inner binary
+    xvec_in_com = m3/m_out*rvec_out # Centre of mass position of inner binary
     xvec3 = -m_in/m_out*rvec_out # Position of tertiary
     
-    vvec_in = m3/m_out*vvec_out # Centre of mass velocity of inner binary
+    vvec_in_com = m3/m_out*vvec_out # Centre of mass velocity of inner binary
     vvec3 = -m_in/m_out*vvec_out # Position of tertiary
 
-    xvec1 = xvec_in + m2/m_in*rvec_in # Position of primary
-    xvec2 = xvec_in - m1/m_in*rvec_in # Position of secondary
+    xvec1 = xvec_in_com + m2/m_in*rvec_in # Position of primary
+    xvec2 = xvec_in_com - m1/m_in*rvec_in # Position of secondary
 
-    vvec1 = vvec_in + m2/m_in*vvec_in # Velocity of primary
-    vvec2 = vvec_in - m1/m_in*vvec_in # Velocity of secondary
+    vvec1 = vvec_in_com + m2/m_in*vvec_in # Velocity of primary
+    vvec2 = vvec_in_com - m1/m_in*vvec_in # Velocity of secondary
 
     # Check if centre of mass is at origin and at rest
     if not np.allclose(np.sum([m1*xvec1,m2*xvec2,m3*xvec3],axis=0),np.zeros(3)):
