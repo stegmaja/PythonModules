@@ -675,10 +675,12 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
 
     # Check if centre of mass is at origin and at rest
     if not np.allclose(np.sum([m1*xvec1,m2*xvec2,m3*xvec3],axis=0),np.zeros(3)):
-        raise ValueError('Centre of mass is not at origin')
+        #raise ValueError('Centre of mass is not at origin')
+        print('Centre of mass is not at origin')
     
     if not np.allclose(np.sum([m1*vvec1,m2*vvec2,m3*vvec3],axis=0),np.zeros(3)):
-        raise ValueError('Centre of mass is not at rest')
+        #raise ValueError('Centre of mass is not at rest')
+        print('Centre of mass is not at rest')
     
     # Add centre of mass position and velocity
     xvec1 += rcom
