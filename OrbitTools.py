@@ -81,6 +81,39 @@ def orbital_elements_to_vectorial_elements(cos_i, Omega, omega):
 
     return lvec,evec,nvec
 
+def vectorial_elements_to_orbital_elements(lvec, evec):
+    ''' 
+    Input:
+        lvec: unit vector in the direction of the angular momentum
+        evec: unit vector in the direction of the eccentricity vector
+
+    Output:
+        cos_i: Cos of inclination
+        Omega: longitude of the ascending node
+        omega: argument of periapsis
+    '''
+
+    # Raise error if lvec, evec, nvec are not 3D
+    if(len(lvec)!=3 or len(evec)!=3):
+        raise ValueError('Input vectors must be 3D')
+    
+    # Raise error if input is not a numpy array containing numbers
+    if(not isinstance(lvec,np.ndarray) or not isinstance(evec,np.ndarray) or not all(isinstance(x,(int,float)) for x in lvec) or not all(isinstance(x,(int,float)) for x in evec)):
+        raise ValueError('Input vectors must be numpy arrays containing numbers')
+
+    cos_i = lvec[2]
+
+    n = np.cross([0,0,1],lvec)
+    N = np.linalg.norm(n)
+
+    Omega = np.arccos(n[0]/N)
+    if(n[1]<0): Omega = 2*np.pi-Omega
+
+    omega = np.arccos(np.dot(n,evec)/(N))
+    if(evec[2]<0): omega = 2*np.pi-omega
+
+    return cos_i,Omega,omega
+
 def orbital_angular_momentum(a, e, m1=1, m2=1, units=(u.AU,u.km/u.s,u.Msun)):
     '''
     Input:
@@ -261,6 +294,7 @@ def apply_kick_to_orbit(a, vkick, m_SN, dm_SN, m_comp, dm_comp=0, vkick_phi=None
         v_com_new: centre of mass velocity (km/s)   
     '''
 
+    '''
     # Raise error if input is not a number or None
     if(not all(isinstance(x,(int,float)) or x is None for x in [f,vkick_phi,vkick_theta])):
         raise ValueError('f,vkick_phi,vkick_theta must be numbers or None')
@@ -284,12 +318,13 @@ def apply_kick_to_orbit(a, vkick, m_SN, dm_SN, m_comp, dm_comp=0, vkick_phi=None
     # Raise error if dm_SN, dm_comp are greater than m_SN, m_comp
     if(dm_SN>m_SN or dm_comp>m_comp):
         raise ValueError('dm_SN,dm_comp must be less than m_SN,m_comp')
+    '''
 
     if f is None:
         f = get_true_anomaly(e)
 
         if verbose:
-            print('True anomaly not provided. Calculated from random mean anomaly:',M,end='\n\n')
+            print('True anomaly not provided. Calculated from random mean anomaly.',end='\n\n')
 
     if vkick_phi is None:
         vkick_phi = np.random.uniform(0,2*np.pi)
@@ -367,12 +402,12 @@ def check_triple_stability(a_in,a_out,e_out,m_in,m_out):
     '''
 
     # Raise error if input is not a number
-    if(not all(isinstance(x,(int,float)) for x in [a_in,a_out,e_out,m_in,m_out])):
-        raise ValueError('All input parameters must be numbers')
+    #if(not all(isinstance(x,(int,float)) for x in [a_in,a_out,e_out,m_in,m_out])):
+    #    raise ValueError('All input parameters must be numbers')
     
     # Raise error if input is not a number
-    if(a_in<0 or a_out<0 or m_in<0 or m_out<0 or e_out<0 or e_out>=1):
-        raise ValueError('a_in,a_out,m_in,m_out must be positive and e_out must be between 0 and 1')
+    #if(a_in<0 or a_out<0 or m_in<0 or m_out<0 or e_out<0 or e_out>=1):
+    #    raise ValueError('a_in,a_out,m_in,m_out must be positive and e_out must be between 0 and 1')
 
     # Check if inner binary is stable
     stable = a_out/a_in > 2.8/(1-e_out)*((m_in+m_out)/m_in*(1+e_out)/np.sqrt(1-e_out))**(2/5)
@@ -480,12 +515,13 @@ def Roche_lobe_radius(m1,m2):
     '''
 
     # Raise error if input is not a number
-    if(not all(isinstance(x,(int,float)) for x in [m1,m2])):
-        raise ValueError('m1,m2 must be numbers')
+    #if(not all(isinstance(x,(int,float)) for x in [m1,m2])):
+    #    print(m1.dtype,m2.dtype)
+    #    raise ValueError('m1,m2 must be numbers')
     
     # Raise error if m1, m2 are negative
-    if(m1<0 or m2<0):
-        raise ValueError('m1,m2 must be positive')
+    #if(m1<0 or m2<0):
+    #    raise ValueError('m1,m2 must be positive')
     
     q = m1/m2
 
@@ -538,6 +574,7 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
         vvec3: velocity vector of the tertiary (km/s)
     '''
 
+    
     # Raise error if input is not a number or None
     if(not all(isinstance(x,(int,float)) or x is None for x in [a_in,e_in,cos_i_in,Omega_in,omega_in,f_in,a_out,e_out,cos_i_out,Omega_out,omega_out,f_out])):
         raise ValueError('All input parameters must be numbers or None')
@@ -693,4 +730,33 @@ def get_triple_vectors(a_in=None, e_in=None, cos_i_in=None, Omega_in=None, omega
 
     return xvec1,xvec2,xvec3,vvec1,vvec2,vvec3
 
-print('OrbitTools.py loaded.')
+def power_law_sample(alpha, xmin, xmax):
+    '''
+    Input:
+        alpha: power-law index
+        xmin: minimum value
+        xmax: maximum value
+    Output:
+        x: random value
+    '''
+
+    # Raise error if input is not a number
+    if(not all(isinstance(x,(int,float)) for x in [alpha,xmin,xmax])):
+        raise ValueError('All input parameters must be numbers')
+    
+    # Raise error if xmin is greater than xmax
+    if(xmin>xmax):
+        raise ValueError('xmin must be less than xmax')
+    
+    # Raise error if alpha is -1
+    if(alpha==-1):
+        raise ValueError('alpha must not be -1')
+    
+    stamm_func = lambda x: x**(alpha+1)/(alpha+1)
+
+    Norm = 1/(stamm_func(xmax) - stamm_func(xmin))
+    
+    return ((alpha+1)*np.random.uniform()/Norm+xmin**(alpha+1))**(1/(alpha+1))
+
+print('OrbitTools.py loaded.',end='\n\n')
+
