@@ -11,7 +11,7 @@ def orbital_elements_to_vectors(a, e, cos_i, Omega, omega, f, m=1, units=(u.AU,u
         cos_i: Cos of inclination
         Omega: longitude of the ascending node
         omega: argument of periapsis
-        M: true anomaly
+        f: true anomaly
         m: total mass (Msun)
 
     Output:
